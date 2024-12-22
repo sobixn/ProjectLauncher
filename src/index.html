@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Minecraft Launcher</title>
+    <link rel="stylesheet" href="renderer/styles/main.css">
+    <style>
+        body {
+            color: #333333;
+            /* 텍스트 선택 방지 */
+            user-select: none;
+            -webkit-user-select: none;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading"></div>
+    <div id="login" style="display: none;"></div>
+    <div id="main" style="display: none;"></div>
+
+    <script>
+        const LoadingBootstrap = require('./renderer/components/LoadingBootstrap');
+        const TitleBar = require('./renderer/components/TitleBar');
+        
+        // 우클릭 방지
+        document.addEventListener('contextmenu', event => event.preventDefault());
+        
+        new TitleBar();
+        new LoadingBootstrap(); // LoadingBootstrap만 실행
+    </script>
+</body>
+</html>
