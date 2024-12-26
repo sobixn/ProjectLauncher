@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Launcher</title>
+    <link rel="stylesheet" href="../../node_modules/antd/dist/antd.dark.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #141414;
+            color: #ffffff;
+            height: 100vh;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .profile-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+
+        .profile-skin {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .profile-name {
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .play-button-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform: translateY(60px);
+        }
+
+        #playButton {
+            font-size: 24px;
+            height: auto;
+            padding: 16px 64px;
+            border-radius: 8px;
+            background: linear-gradient(45deg, #1890ff, #40a9ff);
+            border: none;
+            box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        #playButton:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(24, 144, 255, 0.4);
+        }
+
+        #playButton:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="profile-container">
+            <div class="profile-skin">
+                <img id="skinPreview" src="" alt="Player Skin" width="32" height="32">
+            </div>
+            <span id="playerName" class="profile-name">플레이어</span>
+        </div>
+        <div class="play-button-container">
+            <button id="playButton" class="ant-btn ant-btn-primary ant-btn-lg">
+                플레이
+            </button>
+        </div>
+    </div>
+    <script src="./MainUI.js"></script>
+</body>
+</html>

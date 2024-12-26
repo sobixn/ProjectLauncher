@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Launcher Initialization</title>
+    <link rel="stylesheet" href="../../node_modules/antd/dist/antd.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #141414;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        .container {
+            text-align: center;
+            width: 80%;
+            max-width: 600px;
+            padding: 20px;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+        .spinner {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        .spinner.error svg {
+            fill: #ff4d4f;
+        }
+        .title {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #ffffff;
+            font-weight: 500;
+        }
+        .loading-text {
+            font-size: 16px;
+            margin-bottom: 20px;
+            color: #ffffff;
+            transition: color 0.3s ease;
+        }
+        .loading-text.error {
+            color: #ff4d4f;
+        }
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background: #1f1f1f;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: #1890ff;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+        .progress-bar.error {
+            background: #ff4d4f;
+            animation: none;
+        }
+        .progress-bar.loading {
+            animation: progress 2s infinite;
+        }
+        @keyframes progress {
+            0% { width: 0%; }
+            50% { width: 70%; }
+            100% { width: 100%; }
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .version {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 12px;
+        }
+        .fade-out {
+            opacity: 0;
+            transition: opacity 0.5s ease-out;
+        }
+        .fade-in {
+            opacity: 1;
+            transition: opacity 0.5s ease-in;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="spinner" id="spinner">
+            <svg viewBox="0 0 1024 1024" width="48" height="48" fill="#1890ff">
+                <path d="M512 1024c-69.1 0-136.2-13.5-199.3-40.2C251.7 958 197 921 150 874c-47-47-84-101.7-109.8-162.7C13.5 648.2 0 581.1 0 512c0-19.9 16.1-36 36-36s36 16.1 36 36c0 59.4 11.6 117 34.6 171.3c22.2 52.4 53.9 99.5 94.3 139.9c40.4 40.4 87.5 72.2 139.9 94.3C395 940.4 452.6 952 512 952c59.4 0 117-11.6 171.3-34.6c52.4-22.2 99.5-53.9 139.9-94.3c40.4-40.4 72.2-87.5 94.3-139.9C940.4 629 952 571.4 952 512c0-59.4-11.6-117-34.6-171.3c-22.2-52.4-53.9-99.5-94.3-139.9c-40.4-40.4-87.5-72.2-139.9-94.3C629 83.6 571.4 72 512 72c-19.9 0-36-16.1-36-36s16.1-36 36-36c69.1 0 136.2 13.5 199.3 40.2C772.3 66 827 103 874 150c47 47 84 101.7 109.8 162.7C1010.5 375.8 1024 442.9 1024 512c0 69.1-13.5 136.2-40.2 199.3C958 772.3 921 827 874 874c-47 47-101.7 84-162.7 109.8C648.2 1010.5 581.1 1024 512 1024z">
+                    <animateTransform attributeName="transform" type="rotate" from="0 512 512" to="360 512 512" dur="1s" repeatCount="indefinite"/>
+                </path>
+            </svg>
+          </div>
+          <h1 class="title">런처 초기화</h1>
+          <!-- 동적 로딩 텍스트를 위한 빈 요소 -->
+          <p class="loading-text" id="loadingText">런처를 초기화하는 중...</p>
+          <div class="progress-container">
+              <div class="progress-bar loading" id="progressBar"></div>
+          </div>
+      </div>
+    <div class="version">v1.0.0</div>
+    <script src="../../src/preload.js"></script>
+    <script src="./InitializedBootstrap.js" type="module"></script>
+</body>
+</html>

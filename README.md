@@ -1,41 +1,118 @@
-# Minecraft Launcher
+### Step 1: Create the Project Directory
 
-This project is a custom Minecraft launcher built using Electron. It integrates various libraries to provide a seamless experience for launching Minecraft and managing user accounts.
-
-## Features
-
-- User account management with authentication using `minecraft-auth`
-- Launch Minecraft using `minecraft-launcher-core`
-- Display current status in Discord using `discord.js`
-- Manage player skins with `SkinManager`
-- User-friendly interface with loading animations
-
-## Installation
-
-1. Clone the repository:
-   ```
-   git clone <repository-url>
-   ```
-2. Navigate to the project directory:
-   ```
-   cd minecraft-launcher
-   ```
-3. Install dependencies:
-   ```
-   npm install
+1. Open your terminal or command prompt.
+2. Navigate to the location where you want to create your project.
+3. Create a new directory for your project:
+   ```bash
+   mkdir my-project
+   cd my-project
    ```
 
-## Usage
+### Step 2: Initialize a New Node.js Project
 
-To start the application, run:
-```
-npm start
-```
+1. Initialize a new Node.js project:
+   ```bash
+   npm init -y
+   ```
 
-## Contributing
+### Step 3: Install TypeScript
 
-Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
+1. Install TypeScript as a development dependency:
+   ```bash
+   npm install typescript --save-dev
+   ```
 
-## License
+### Step 4: Create a TypeScript Configuration File
 
-This project is licensed under the MIT License. See the LICENSE file for details.
+1. Create a `tsconfig.json` file in the root of your project:
+   ```bash
+   npx tsc --init
+   ```
+
+2. Modify the `tsconfig.json` file as needed. Here’s a basic example:
+   ```json
+   {
+     "compilerOptions": {
+       "target": "es6",
+       "module": "commonjs",
+       "outDir": "./dist",
+       "rootDir": "./src",
+       "strict": true,
+       "esModuleInterop": true
+     },
+     "include": ["src/**/*"],
+     "exclude": ["node_modules", "**/*.spec.ts"]
+   }
+   ```
+
+### Step 5: Create the `src` Directory Structure
+
+1. Create the `src` directory:
+   ```bash
+   mkdir src
+   ```
+
+2. Inside the `src` directory, create the necessary subdirectories and files based on your project requirements. For example:
+   ```bash
+   mkdir src/components
+   mkdir src/services
+   touch src/index.ts
+   touch src/components/MyComponent.ts
+   touch src/services/MyService.ts
+   ```
+
+### Step 6: Add Sample Code
+
+1. Open the files you created and add some sample TypeScript code. For example, in `src/index.ts`:
+   ```typescript
+   import { MyComponent } from './components/MyComponent';
+   import { MyService } from './services/MyService';
+
+   const component = new MyComponent();
+   const service = new MyService();
+
+   console.log(component.render());
+   console.log(service.getData());
+   ```
+
+2. In `src/components/MyComponent.ts`:
+   ```typescript
+   export class MyComponent {
+     render() {
+       return 'Hello from MyComponent!';
+     }
+   }
+   ```
+
+3. In `src/services/MyService.ts`:
+   ```typescript
+   export class MyService {
+     getData() {
+       return 'Data from MyService!';
+     }
+   }
+   ```
+
+### Step 7: Build and Run the Project
+
+1. Add a build script to your `package.json`:
+   ```json
+   "scripts": {
+     "build": "tsc",
+     "start": "node dist/index.js"
+   }
+   ```
+
+2. Build the project:
+   ```bash
+   npm run build
+   ```
+
+3. Run the project:
+   ```bash
+   npm start
+   ```
+
+### Conclusion
+
+You now have a basic TypeScript project structure set up in your workspace. You can expand upon this structure by adding more components, services, or any other features as needed.
