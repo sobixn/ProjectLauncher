@@ -10,7 +10,7 @@ class ForgeClient {
         this.mcVersion = "1.21.1";
         this.forgeVersion = "52.0.37";
         this.brandName = "project_vir";
-        this.serverHost = "syuu.net";  // 서버 주소 변경
+        this.serverHost = "syuu.net";  
         this.gamePath = path.join(process.env.APPDATA, '.project-vir');
         this.dataPath = path.join(this.gamePath, 'data');
         this.assetsPath = path.join(this.gamePath, 'assets');
