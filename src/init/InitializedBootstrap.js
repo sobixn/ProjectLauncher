@@ -18,10 +18,56 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
+    const fadeTransition = async (text) => {
+        const container = document.querySelector('.container');
+        const loadingText = document.getElementById('loadingText');
+        
+        // Fade out
+        container.classList.add('fade-out');
+        await sleep(500);
+        
+        // Update text if provided
+        if (text) {
+            loadingText.textContent = text;
+        }
+        
+        // Fade in
+        container.classList.remove('fade-out');
+        container.classList.add('fade-in');
+        await sleep(500);
+    };
+
     const initSequence = async () => {
         try {
-            // 초기 상태
             await updateProgress(0, 10, '런처를 초기화하는 중...', 800);
+            
+            // 계정 정보 확인
+            const gamePath = await window.electron.getGamePath();
+            
+            try {
+                const accountInfo = await window.electron.ipcRenderer.invoke('load-account-info');
+                if (accountInfo.success && accountInfo.data) {
+                    
+                    // 계정 정보가 있으면 localStorage에 저장하고 메인으로 이동
+                    const data = accountInfo.data;
+                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('uuid', data.uuid);
+                    localStorage.setItem('accessToken', data.accessToken);
+                    localStorage.setItem('clientToken', data.clientToken);
+
+                    await fadeTransition(`${data.username}님 환영합니다...`);
+                    await updateProgress(100, 100, '자동 로그인 중...', 500);
+                    await sleep(500);
+                    
+                    window.electron.ipcRenderer.invoke('navigate', 'main');
+                    return;
+                }
+            } catch (error) {
+                console.log('No saved account info:', error);
+            }
+
+            // 기존 초기화 절차
+            await updateProgress(30, 60, '시스템 체크 중...', 1000);
             
             // 1. Java 시스템 확인
             await updateProgress(10, 30, '자바 확인 중...', 1500);
@@ -47,19 +93,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            // 완료
+            // 완료 후 로그인 페이지로 이동
             await updateProgress(90, 100, '초기화 완료', 1000);
-            progressBar.classList.remove('loading');
-            
-            // 로그인 상태 확인
-            const isLoggedIn = await window.electron.checkLoginStatus();
-            if (!isLoggedIn) {
-                await sleep(500);
-                const container = document.querySelector('.container');
-                container.classList.add('fade-out');
-                await sleep(500);
-                window.electron.ipcRenderer.invoke('navigate', 'login');
-            }
+            await sleep(500);
+            window.electron.ipcRenderer.invoke('navigate', 'login');
 
         } catch (error) {
             await updateProgress(0, 0, `초기화 실패: ${error.message}`, 0);

@@ -1,4 +1,16 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // 페이드인 효과
+    const container = document.querySelector('.container');
+    if (container) {
+        container.style.opacity = '0';
+        requestAnimationFrame(() => {
+            container.style.opacity = '1';
+        });
+    }
+
+    // path 모듈 로드를 위해 preload.js를 통해 노출된 API 사용
+    const path = window.electron.path; // preload.js에서 path 모듈 추가 필요
+
     const playButton = document.getElementById('playButton');
     const playerName = document.getElementById('playerName');
     const skinPreview = document.getElementById('skinPreview');
@@ -13,50 +25,37 @@ document.addEventListener('DOMContentLoaded', () => {
             window.electron.log.info('Starting game launch...');
             playButton.textContent = 'Checking game files...';
 
+            // 게임 경로를 먼저 가져옵니다
+            const gamePath = await window.electron.getGamePath();
+            if (!gamePath) {
+                throw new Error('Game path is not available');
+            }
+
+            // path.join을 window.electron.path.join으로 사용
+            const instancePath = window.electron.path.join(gamePath, 'instances', 'Project_vir');
+
             const options = {
-                clientPackage: null,
                 authorization: {
                     access_token: localStorage.getItem('accessToken'),
                     client_token: localStorage.getItem('clientToken'),
                     uuid: localStorage.getItem('uuid'),
                     name: localStorage.getItem('username')
                 },
-                root: "./minecraft",
+                root: gamePath,
+                gameDir: instancePath, // 게임 데이터 저장 경로
                 version: {
                     number: "1.21.1",
-                    type: "Project_vir"
+                    type: "release"
                 },
+                forge: false, // Forge 설정 변경
                 memory: {
                     max: "4G",
                     min: "2G"
                 },
-                hideConsole: true,
-                detached: true,
-                customArgs: [
-                    "-Xmx4G",
-                    "-Xms2G",
-                    "-XX:+UseG1GC",
-                    "-XX:+ParallelRefProcEnabled",
-                    "-XX:MaxGCPauseMillis=200",
-                    "-XX:+UnlockExperimentalVMOptions",
-                    "-XX:+DisableExplicitGC",
-                    "-XX:+AlwaysPreTouch",
-                    "-XX:G1NewSizePercent=30",
-                    "-XX:G1MaxNewSizePercent=40",
-                    "-XX:G1HeapRegionSize=8M",
-                    "-XX:G1ReservePercent=20",
-                    "-XX:G1HeapWastePercent=5",
-                    "-XX:G1MixedGCCountTarget=4",
-                    "-XX:InitiatingHeapOccupancyPercent=15",
-                    "-XX:G1MixedGCLiveThresholdPercent=90",
-                    "-XX:G1RSetUpdatingPauseTimePercent=5",
-                    "-XX:SurvivorRatio=32",
-                    "-XX:+PerfDisableSharedMem",
-                    "-XX:MaxTenuringThreshold=1",
-                    "-Dusing.aikars.flags=https://mcflags.emc.gs",
-                    "-Daikars.new.flags=true",
-                    "-Djava.awt.headless=false"
-                ]
+                overrides: {
+                    detached: false
+                },
+                javaPath: null // Java 자동 감지
             };
 
             window.electron.log.info('Launch options:', options);
@@ -89,14 +88,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 프로필 정보 로드
-    const loadProfile = () => {
-        const username = localStorage.getItem('username') || '플레이어';
-        playerName.textContent = username;
-        
-        // 스킨 프리뷰 로드
-        const uuid = localStorage.getItem('uuid');
-        if (uuid) {
-            skinPreview.src = `https://crafatar.com/avatars/${uuid}?overlay=true`;
+    const loadProfile = async () => {
+        try {
+            console.log('[Profile] Loading profile...');
+            const profile = await window.electron.ipcRenderer.invoke('get-profile');
+            console.log('[Profile] Profile data received:', profile);
+
+            if (profile) {
+                playerName.textContent = profile.username || '플레이어';
+                skinPreview.src = profile.uuid 
+                    ? `https://crafatar.com/avatars/${profile.uuid}?overlay=true`
+                    : 'default-skin.png';
+            } else {
+                playerName.textContent = '플레이어';
+                skinPreview.src = 'default-skin.png';
+            }
+
+            // 디버그 로그 추가
+            console.log('[Profile] Loaded profile:', profile);
+        } catch (error) {
+            console.error('[Profile] Load error:', error);
         }
     };
 

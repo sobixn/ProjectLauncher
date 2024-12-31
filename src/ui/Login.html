@@ -33,28 +33,58 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
-            transition: background-color 0.3s;
+            transition: all 0.3s ease;
+            outline: none;
+            width: 100%;
+            max-width: 300px;
+            position: relative;
+            overflow: hidden;
         }
 
         .login-button:hover {
             background: #106ebe;
+            transform: translateY(-2px);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
         }
 
         .login-button:disabled {
             opacity: 0.7;
             cursor: not-allowed;
+            transform: none;
         }
 
         .error-message {
             color: #ff4d4f;
             margin-top: 1rem;
         }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .input-field {
+            padding: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        .input-field::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="title">로그인</h1>
-        <button id="msLoginBtn" class="login-button">마이크로소프트 계정으로 로그인</button>
+        <h1 class="title">Microsoft 계정 로그인</h1>
+        <button type="button" id="msLoginBtn" class="login-button">
+            Microsoft 계정으로 로그인
+        </button>
     </div>
     <script src="./LoginUI.js"></script>
 </body>

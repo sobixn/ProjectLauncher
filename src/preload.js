@@ -3,6 +3,7 @@ const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const log = require('electron-log');
+const { Buffer } = require('buffer');
 
 const checkJavaEnvironment = () => {
   try {
@@ -73,22 +74,23 @@ contextBridge.exposeInMainWorld('electron', {
   },
   getAppPath: () => process.env.APPDATA + '/.project-vir',
   log: {
-    info: (message) => ipcRenderer.send('log-info', message),
-    error: (message) => ipcRenderer.send('log-error', message)
+    info: (...args) => log.info(...args),
+    error: (...args) => log.error(...args)
+  },
+  path: {
+    join: (...args) => path.join(...args)
+  },
+  getGamePath: async () => {
+    const gamePath = path.join(process.env.APPDATA, '.project-vir');
+    return gamePath;
   },
   ipcRenderer: {
-    invoke: async (channel, ...args) => {
-      const validChannels = ['launchMinecraft', 'navigate', 'ms-login', 'minimize-window'];
-      if (validChannels.includes(channel)) {
-        try {
-          return await ipcRenderer.invoke(channel, ...args);
-        } catch (error) {
-          log.error(`Channel ${channel} error:`, error);
-          return { success: false, error: error.message };
-        }
-        
-      }
-    }
+    invoke: (...args) => ipcRenderer.invoke(...args),
+    on: (...args) => ipcRenderer.on(...args)
+  },
+  buffer: {
+    from: (data, encoding) => Buffer.from(data, encoding),
+    toString: (buffer, encoding) => buffer.toString(encoding)
   }
 
 });

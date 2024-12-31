@@ -1,29 +1,48 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const log = require('electron-log');
-const { Client } = require('minecraft-launcher-core');
-const launcher = new Client();
-const { exec } = require('child_process');
-const https = require('https');
 const fs = require('fs');
+const msmc = require('msmc');  // msmc 모듈 추가
+const MicrosoftAuth = require('./src/security/MicrosoftAuth');
+const AccountManager = require('./src/security/AccountManager');
+const AutoLogin = require('./src/security/AutoLogin');
+
+// 로그 디렉토리 설정
+const LAUNCHER_LOG_DIR = path.join(process.env.APPDATA, '.project-vir', 'logs', 'launcher');
+const GAME_LOG_DIR = path.join(process.env.APPDATA, '.project-vir', 'logs', 'game');
 
 // 로그 디렉토리 생성
-const createLogDirectories = () => {
-    const dirs = [
-        path.join(__dirname, 'logs/game'),
-        path.join(__dirname, 'logs/launcher')
-    ];
-    dirs.forEach(dir => {
-        if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
-        }
-    });
-};
+if (!fs.existsSync(LAUNCHER_LOG_DIR)) {
+    fs.mkdirSync(LAUNCHER_LOG_DIR, { recursive: true });
+}
+if (!fs.existsSync(GAME_LOG_DIR)) {
+    fs.mkdirSync(GAME_LOG_DIR, { recursive: true });
+}
 
-// 로그 설정
-log.transports.file.level = 'debug';
-log.transports.file.format = '[{y}-{m}-{d} {h}:{i}:{s}.{ms}] [{level}] {text}';
-log.transports.file.resolvePathFn = () => path.join(__dirname, 'logs/launcher/main.log');
+// 런처 로그 설정
+log.catchErrors();
+log.variables.processType = 'launcher';
+
+// 런처 메인 로그
+const mainLog = log.create('main');
+mainLog.transports.file.resolvePath = () => path.join(LAUNCHER_LOG_DIR, 'launcher_main.log');
+mainLog.transports.file.level = 'info';
+
+// 런처 디버그 로그
+const debugLog = log.create('debug');
+debugLog.transports.file.resolvePath = () => path.join(LAUNCHER_LOG_DIR, 'launcher_debug.log');
+debugLog.transports.file.level = 'debug';
+
+// 게임 로그 설정
+const gameLog = log.create('game');
+gameLog.transports.file.resolvePath = () => path.join(GAME_LOG_DIR, 'game_main.log');
+gameLog.transports.file.level = 'info';
+
+global.log = {
+    main: mainLog,
+    debug: debugLog,
+    game: gameLog
+};
 
 let mainWindow;
 
@@ -36,90 +55,90 @@ function createWindow() {
             nodeIntegration: false,
             contextIsolation: true,
             preload: path.join(__dirname, 'src/preload.js'),
-            devTools: false  // DevTools 비활성화
+            devTools: false
         }
     });
 
-    // F12 키 비활성화
     mainWindow.webContents.on('before-input-event', (event, input) => {
         if (input.key === 'F12') {
             event.preventDefault();
         }
     });
 
-    // 프로덕션 모드에서는 메뉴바 제거
     mainWindow.setMenu(null);
-
     mainWindow.loadFile(path.join(__dirname, 'src/init/InitializedBootstrap.html'));
 }
 
 app.whenReady().then(() => {
-    createLogDirectories();
     createWindow();
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    log.info('All windows closed, quitting app');
-    app.quit();
-  }
+    if (process.platform !== 'darwin') {
+        log.info('All windows closed, quitting app');
+        app.quit();
+    }
 });
 
 app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
+    if (BrowserWindow.getAllWindows().length === 0) {
+        createWindow();
+    }
 });
 
 ipcMain.handle('update-progress', async (event, { value, text }) => {
-  log.info(`Progress Update: ${value}% - ${text}`);
-  return true;
+    log.info(`Progress Update: ${value}% - ${text}`);
+    return true;
 });
 
 ipcMain.handle('check-filesystem', async () => {
-  log.info('Checking file system');
-  return new Promise(resolve => setTimeout(resolve, 1000));
+    log.info('Checking file system');
+    return new Promise(resolve => setTimeout(resolve, 1000));
 });
 
 ipcMain.handle('check-java', async () => {
-  log.info('Checking Java');
-  return new Promise(resolve => setTimeout(resolve, 1500));
+    log.info('Checking Java');
+    return new Promise(resolve => setTimeout(resolve, 1500));
 });
 
 ipcMain.handle('check-updates', async () => {
-  log.info('Checking updates');
-  return new Promise(resolve => setTimeout(resolve, 1000));
+    log.info('Checking updates');
+    return new Promise(resolve => setTimeout(resolve, 1000));
 });
 
 ipcMain.handle('check-integrity', async () => {
-  log.info('Checking file integrity');
-  // 여기에 무결성 검사 로직 추가
-  return { success: true };
+    log.info('Checking file integrity');
+    return { success: true };
 });
 
 ipcMain.handle('check-launcher', async () => {
-  log.info('Checking launcher');
-  // 여기에 런처 검사 로직 추가
-  return { success: true };
+    log.info('Checking launcher');
+    return { success: true };
 });
 
-// 로그인 상태 체크 핸들러
 ipcMain.handle('check-login-status', async () => {
-  log.info('Checking login status');
-  try {
-    // 여기에 실제 로그인 상태 체크 로직 추가
-    // 임시로 false 반환 (로그인되지 않은 상태)
-    return false;
-  } catch (error) {
-    log.error('Login status check failed:', error);
-    return false;
-  }
+    log.info('Checking login status');
+    try {
+        return false;
+    } catch (error) {
+        log.error('Login status check failed:', error);
+        return false;
+    }
 });
 
-// 페이지 전환 핸들러
 ipcMain.handle('navigate', async (event, page) => {
     log.info(`Navigating to ${page}`);
     try {
+        // AutoLogin을 생성자로 호출하지 않고 직접 사용
+        const autoLoginResult = await AutoLogin.checkAndAutoLogin();
+        
+        if (autoLoginResult.success) {
+            log.info('[Navigation] Auto login successful, redirecting to main');
+            mainWindow.loadFile(path.join(__dirname, 'src/ui/Main.html'));
+            return true;
+        }
+
+        // 자동 로그인 실패시 일반 네비게이션
         switch (page) {
             case 'login':
                 mainWindow.loadFile(path.join(__dirname, 'src/ui/Login.html'));
@@ -137,26 +156,27 @@ ipcMain.handle('navigate', async (event, page) => {
     }
 });
 
-// Microsoft OAuth 설정
-const msOAuthConfig = {
-    client_id: '63ee60c7-5070-4e43-aa17-f1134b834e77',
-    redirect_uri: 'http://localhost:3000/callback'
-};
-
+// Microsoft 로그인 핸들러
 ipcMain.handle('ms-login', async () => {
     try {
-        // 테스트용 오프라인 모드 사용자
+        log.info('[Auth] Starting Microsoft login...');
+        const result = await MicrosoftAuth.authenticate();
+        
+        log.info('[Auth] Login result:', result);
+
+        if (!result.success) {
+            throw new Error(result.error || 'Authentication failed');
+        }
+
         return {
             success: true,
-            username: 'TestUser',
-            uuid: '12345678-1234-1234-1234-123456789012',
-            accessToken: 'test-access-token'
+            data: result.data
         };
     } catch (error) {
-        log.error('Login error:', error);
+        log.error('[Auth] Microsoft login error:', error);
         return {
             success: false,
-            error: error.message
+            error: error.message || 'Microsoft 로그인 실패'
         };
     }
 });
@@ -199,23 +219,65 @@ ipcMain.handle('installJava', async () => {
     });
 });
 
-// 마인크래프트 실행 핸들러
 ipcMain.handle('launchMinecraft', async (event, options) => {
     try {
-        log.info('Received launch request');
-        
-        if (!options || !options.authorization) {
-            throw new Error('Invalid launch options');
-        }
-
+        log.info('Launching Minecraft with options:', options);
         const launcher = new Client();
+
+        launcher.on('debug', (e) => log.info('Debug:', e));
+        launcher.on('data', (e) => log.info('Data:', e));
+        launcher.on('error', (e) => log.error('Error:', e));
+
         await launcher.launch(options);
-        
+
         log.info('Game launched successfully');
         return { success: true };
-        
     } catch (error) {
         log.error('Launch error:', error);
+        return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('save-account-info', async (event, accountData) => {
+    try {
+        log.info('[Account Save] Attempting to save account info...');
+        
+        if (!accountData || typeof accountData !== 'object') {
+            throw new Error('Invalid account data format');
+        }
+
+        const result = await AccountManager.save(accountData);
+        log.info('[Account Save] Save result:', result);
+        return result;
+    } catch (error) {
+        log.error('[Account Save] Error:', error);
+        return { 
+            success: false, 
+            error: error.message 
+        };
+    }
+});
+
+ipcMain.handle('load-account-info', async () => {
+    try {
+        const gamePath = path.join(process.env.APPDATA, '.project-vir');
+        const accountFile = path.join(gamePath, 'account', 'launcher-project.json');
+
+        if (fs.existsSync(accountFile)) {
+            const jsonData = fs.readFileSync(accountFile, 'utf8');
+            const data = JSON.parse(jsonData);
+
+            if (Date.now() - data.timestamp > 24 * 60 * 60 * 1000) {
+                fs.unlinkSync(accountFile);
+                return { success: false };
+            }
+
+            return { success: true, data };
+        }
+
+        return { success: false, error: 'No account data found' };
+    } catch (error) {
+        log.error('Failed to load account info:', error);
         return { success: false, error: error.message };
     }
 });
@@ -238,13 +300,11 @@ ipcMain.handle('patch-client-ui', async (event, uiConfig) => {
     try {
         const gamePath = path.join(app.getPath('appData'), '.project-vir');
         const assetsPath = path.join(gamePath, 'assets');
-        
-        // UI 리소스 디렉토리 생성
+
         if (!fs.existsSync(assetsPath)) {
             fs.mkdirSync(assetsPath, { recursive: true });
         }
 
-        // UI 설정 저장
         fs.writeFileSync(
             path.join(gamePath, 'ui-config.json'),
             JSON.stringify(uiConfig, null, 2)
@@ -254,5 +314,17 @@ ipcMain.handle('patch-client-ui', async (event, uiConfig) => {
     } catch (error) {
         console.error('UI patch error:', error);
         return { success: false, error: error.message };
+    }
+});
+
+ipcMain.handle('get-profile', async () => {
+    try {
+        log.info('[Profile] Loading profile...');
+        const profile = await AccountManager.getProfile();
+        log.info('[Profile] Profile data:', profile);
+        return profile;
+    } catch (error) {
+        log.error('[Profile] Get profile error:', error);
+        return null;
     }
 });

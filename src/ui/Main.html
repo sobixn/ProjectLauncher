@@ -76,6 +76,33 @@
         #playButton:active {
             transform: translateY(0);
         }
+
+        #launchButton {
+            font-size: 24px;
+            height: auto;
+            padding: 16px 64px;
+            border-radius: 8px;
+            background: linear-gradient(45deg, #1890ff, #40a9ff);
+            border: none;
+            box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        #launchButton:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(24, 144, 255, 0.4);
+        }
+
+        #launchButton:active {
+            transform: translateY(0);
+        }
+
+        #launchButton:disabled {
+            background: linear-gradient(45deg, #888, #999);
+            box-shadow: none;
+            transform: none;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -87,7 +114,7 @@
             <span id="playerName" class="profile-name">플레이어</span>
         </div>
         <div class="play-button-container">
-            <button id="playButton" class="ant-btn ant-btn-primary ant-btn-lg">
+            <button id="launchButton" class="ant-btn ant-btn-primary ant-btn-lg">
                 플레이
             </button>
         </div>

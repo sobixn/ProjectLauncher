@@ -1,10 +1,8 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     console.log('DOM Content Loaded');
 
     // UI 요소
     const loginButton = document.getElementById('msLoginBtn');
-    console.log('Login button:', loginButton);
-
     if (!loginButton) {
         console.error('Login button not found! Check if msLoginBtn ID exists in HTML');
         return;
@@ -18,85 +16,98 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 로그인 상태 관리
     let isLoggingIn = false;
 
-    // 로그인 버튼 이벤트
-    loginButton.addEventListener('click', async () => {
-        console.log('Login button clicked');
-        if (isLoggingIn) return;
+    const saveAccountInfo = async (accountInfo) => {
+    try {
+        const data = {
+            username: accountInfo.username,
+            uuid: accountInfo.uuid,
+            accessToken: accountInfo.accessToken,
+            clientToken: accountInfo.clientToken,
+            timestamp: Date.now()
+        };
 
+        console.log('[Account Save] Preparing account data:', data);
+        // 직접 객체 전달
+        const saveResult = await window.electron.ipcRenderer.invoke('save-account-info', data);
+
+        if (saveResult.success) {
+            localStorage.setItem('username', accountInfo.username);
+            localStorage.setItem('uuid', accountInfo.uuid);
+            localStorage.setItem('accessToken', accountInfo.accessToken);
+            localStorage.setItem('clientToken', accountInfo.clientToken);
+
+            console.log(`[Account Save] Successfully saved account info for: ${accountInfo.username}`);
+            return true;
+        } else {
+            throw new Error(saveResult.error || 'Unknown error during account save');
+        }
+    } catch (error) {
+        console.error('Save account error:', error);
+        return false;
+    }
+};
+
+    const handleLogin = async () => {
+        if (isLoggingIn) return;
+    
         try {
             isLoggingIn = true;
             loginButton.disabled = true;
             loginButton.textContent = 'Microsoft 계정 인증 중...';
-            
+    
             const result = await window.electron.ipcRenderer.invoke('ms-login');
-            window.electron.log.info('Login attempt result:', result);
-
-            if (result.success) {
-                // 로그인 정보 저장
-                localStorage.setItem('username', result.username);
-                localStorage.setItem('uuid', result.uuid);
-                localStorage.setItem('accessToken', result.accessToken);
-
-                loginButton.textContent = `환영합니다, ${result.username}님!`;
-                await sleep(1000);
-                await window.electron.ipcRenderer.invoke('navigate', 'main');
-            } else {
-                window.electron.log.error(`Login failed: ${result.error || '알 수 없는 오류'}`);
-                throw new Error(result.error || '로그인 실패');
+            console.log('[Login] Raw login result:', result);
+    
+            // result.data가 있는 경우 사용, 없으면 result 직접 사용
+            const accountData = result.data || result;
+            console.log('[Login] Account data check:', accountData);
+    
+            // 계정 정보 저장
+            const saveResult = await window.electron.ipcRenderer.invoke('save-account-info', accountData);
+            console.log('[Login] Save result:', saveResult);
+    
+            if (!saveResult.success) {
+                throw new Error(saveResult.error || '계정 정보 저장 실패');
             }
-
+    
+            loginButton.textContent = `환영합니다, ${accountData.username}님!`;
+            await sleep(1000);
+            await window.electron.ipcRenderer.invoke('navigate', 'main');
+    
         } catch (error) {
-            window.electron.log.error('Login error:', error.message);
+            console.error('[Login] Error:', error);
             loginButton.textContent = '로그인 실패';
-            
-            const errorMessage = document.createElement('div');
-            errorMessage.className = 'error-message';
-            errorMessage.textContent = error.message;
-            loginButton.parentNode.appendChild(errorMessage);
-
-            await sleep(3000);
-            errorMessage.remove();
-            loginButton.textContent = '마이크로소프트 계정으로 로그인';
-
+            setTimeout(() => {
+                loginButton.textContent = '마이크로소프트 계정으로 로그인';
+                loginButton.disabled = false;
+            }, 3000);
         } finally {
             isLoggingIn = false;
             loginButton.disabled = false;
         }
-    });
+    };
 
-    // 로그인 버튼 호버 효과
-    loginButton.addEventListener('mouseenter', () => {
-        loginButton.style.backgroundColor = '#106ebe';
-    });
+    loginButton.addEventListener('click', handleLogin);
 
-    loginButton.addEventListener('mouseleave', () => {
-        loginButton.style.backgroundColor = '#0078d4';
-    });
-
-    // 드래그 가능한 영역 설정
-    const dragArea = document.querySelector('.title');
-    if (dragArea) {
-        dragArea.style.webkitAppRegion = 'drag';
-    }
-
-    // 창 컨트롤 버튼 이벤트
-    const minimizeBtn = document.getElementById('minimizeBtn');
-    const closeBtn = document.getElementById('closeBtn');
-
-    if (minimizeBtn) {
-        minimizeBtn.addEventListener('click', () => {
-            window.electron.ipcRenderer.invoke('window-control', 'minimize');
-        });
-    }
-
-    if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-            window.electron.ipcRenderer.invoke('window-control', 'close');
-        });
-    }
+    loginButton.disabled = false;
 });
 
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const loadProfile = async () => {
+    const profile = await window.electron.ipcRenderer.invoke('get-profile');
+    if (profile) {
+        playerName.textContent = profile.username || '플레이어';
+        skinPreview.src = profile.uuid 
+            ? `https://crafatar.com/avatars/${profile.uuid}?overlay=true`
+            : 'default-skin.png';
+    } else {
+        playerName.textContent = '플레이어';
+        skinPreview.src = 'default-skin.png';
+    }
+
+    // 디버그 로그 추가
+    console.log('[Profile] Loaded profile:', profile);
+};
+
+loadProfile();
